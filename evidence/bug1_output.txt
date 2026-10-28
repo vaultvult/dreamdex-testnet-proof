@@ -1,0 +1,4 @@
+--- Bug 1: Silent Data Drop ---
+Indexer returned: 3 rows
+SDK returned:     2 rows
+🚨 VULNERABILITY CONFIRMED: SDK silently dropped a malformed market row.

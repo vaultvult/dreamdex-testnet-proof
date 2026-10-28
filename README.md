@@ -1,12 +1,23 @@
-# DreamDEX Testnet Connection Proof
+# DreamDEX SDK Security Feedback
 
-This repository contains a TypeScript script that connects to the Somnia Hideki Testnet using the official `@somnia-chain/markets-sdk`.
+This repository contains reproducible reports for the DreamDEX Perps Builder Bounty (Feedback Track).
 
-## What it does
-- Initializes the `SomniaMarkets` client using the Hideki testnet configuration.
-- Fetches the list of available perpetual markets.
-- Extracts and logs the details (Pool Address, Margin Bank, Decimals) for the BTC perp market.
+## 🚨 Findings Summary
+1. **[Major] Silent Data Drop in listMarkets**: The SDK silently swallows InvariantError exceptions, returning incomplete market lists.
+2. **[Normal] TypeError Crash in getMarketOnchain**: Hardcoded array indices without length validation cause raw JS crashes on malformed RPC responses.
+3. **[Normal] Invalid GraphQL Query in getOpeningPrices**: The SDK stringifies null into "null" and sends it to the indexer as a valid question ID.
 
-## How to run
-1. Install dependencies: `npm install`
-2. Run the script: `npx tsx connect.ts`
+## 🛠️ Reproductions
+To see the vulnerabilities in action, run the included scripts:
+
+./run-all.sh
+
+This will execute the scripts in the repros/ folder and save the terminal outputs to the evidence/ folder.
+
+### Evidence
+- [Bug 1 Output](./evidence/bug1_output.txt)
+- [Bug 2 Output](./evidence/bug2_output.txt)
+- [Bug 3 Output](./evidence/bug3_output.txt)
+
+## 📄 Detailed Reports
+Full write-ups with suggestions for the DreamDEX team are located in the feedback/ folder.

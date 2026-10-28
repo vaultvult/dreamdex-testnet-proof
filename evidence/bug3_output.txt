@@ -1,0 +1,3 @@
+--- Bug 3: Invalid GraphQL Null Query ---
+Sending qids: ["123","null"]
+🚨 VULNERABILITY CONFIRMED: SDK stringifies null and sends it as a GraphQL query parameter.
