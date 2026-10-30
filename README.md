@@ -1,23 +1,19 @@
-# DreamDEX SDK Security Feedback
+# DreamDEX Builder Bounty: SDK Feedback & MVP Alert Bot
 
-This repository contains reproducible reports for the DreamDEX Perps Builder Bounty (Feedback Track).
+This repository contains my submissions for the DreamDEX Perps Builder Bounty. It includes a comprehensive security/feedback report on the SDK, and a functional MVP (Minimum Viable Product) bot built to monitor market conditions.
 
-## 🚨 Findings Summary
-1. **[Major] Silent Data Drop in listMarkets**: The SDK silently swallows InvariantError exceptions, returning incomplete market lists.
-2. **[Normal] TypeError Crash in getMarketOnchain**: Hardcoded array indices without length validation cause raw JS crashes on malformed RPC responses.
-3. **[Normal] Invalid GraphQL Query in getOpeningPrices**: The SDK stringifies null into "null" and sends it to the indexer as a valid question ID.
+## 🏆 1. MVP Track: Funding Rate Alert Bot
 
-## 🛠️ Reproductions
-To see the vulnerabilities in action, run the included scripts:
+### Overview
+A lightweight, Node.js-based alert bot for the DreamDEX SDK. It continuously monitors the Somnia Testnet using `listPerpMarkets()` and detects when a market's funding rate flips (from positive to negative, or vice versa). When a flip is detected, it pushes an automated alert to a Discord webhook.
 
-./run-all.sh
+### Features
+*   **Real-time Monitoring:** Polls the Hideki Testnet Indexer every 60 seconds.
+*   **State Tracking:** Saves previous funding rates in memory to detect exact flip moments.
+*   **Discord Integration:** Sends formatted alerts directly to a Discord channel.
+*   **Security First:** Uses `dotenv` to protect webhook URLs from being exposed in the public repository.
 
-This will execute the scripts in the repros/ folder and save the terminal outputs to the evidence/ folder.
-
-### Evidence
-- [Bug 1 Output](./evidence/bug1_output.txt)
-- [Bug 2 Output](./evidence/bug2_output.txt)
-- [Bug 3 Output](./evidence/bug3_output.txt)
-
-## 📄 Detailed Reports
-Full write-ups with suggestions for the DreamDEX team are located in the feedback/ folder.
+### How to Run Locally
+1. Clone the repository and install dependencies:
+   ```bash
+   npm install

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamDEX Funding Monitor</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; }
+        .header { text-align: center; margin-bottom: 3rem; }
+        h1 { color: #38bdf8; margin-bottom: 0.5rem; }
+        p { color: #94a3b8; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+        .card { background-color: #1e293b; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #334155; }
+        .card h2 { margin-top: 0; color: #e2e8f0; font-size: 1.5rem; }
+        .rate { font-size: 2rem; font-weight: bold; font-family: monospace; }
+        .positive { color: #4ade80; }
+        .negative { color: #f87171; }
+        .neutral { color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 DreamDEX Funding Monitor</h1>
+        <p>Live rates from Somnia Hideki Testnet (Updates every 60s)</p>
+    </div>
+    <div class="grid" id="dashboard"></div>
+
+    <script>
+        async function fetchRates() {
+            try {
+                const response = await fetch('/api/rates');
+                const data = await response.json();
+                const dashboard = document.getElementById('dashboard');
+                dashboard.innerHTML = ''; // Clear old data
+
+                if (Object.keys(data).length === 0) {
+                    dashboard.innerHTML = '<p style="text-align:center; width:100%;">Fetching initial data... Please wait.</p>';
+                    return;
+                }
+
+                for (const [symbol, rate] of Object.entries(data)) {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    let colorClass = 'neutral';
+                    if (rate > 0) colorClass = 'positive';
+                    if (rate < 0) colorClass = 'negative';
+
+                    card.innerHTML = `
+                        <h2>${symbol} / USD</h2>
+                        <div class="rate ${colorClass}">${rate.toFixed(8)}</div>
+                    `;
+                    dashboard.appendChild(card);
+                }
+            } catch (error) {
+                console.error("Failed to fetch rates:", error);
+            }
+        }
+
+        // Fetch immediately, then every 5 seconds (to keep the UI snappy)
+        fetchRates();
+        setInterval(fetchRates, 5000);
+    </script>
+</body>
+</html>
