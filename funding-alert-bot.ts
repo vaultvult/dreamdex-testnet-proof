@@ -3,19 +3,17 @@ import { hidekiTestnet } from "@somnia-chain/markets-sdk/chains";
 import axios from "axios";
 import * as dotenv from "dotenv";
 
-// Load environment variables from .env
 dotenv.config();
-
-// Securely get the Webhook URL
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
-// Store the last known funding rates to detect flips
+// We export this so the web server can read it
+export const currentRates: Record<string, number> = {};
 const lastFundingRates = new Map<string, number>();
 
-async function checkFundingRates() {
+export async function checkFundingRates() {
     if (!DISCORD_WEBHOOK_URL) {
-        console.error("❌ Error: DISCORD_WEBHOOK_URL is not set in the .env file!");
-        process.exit(1);
+        console.error("❌ Error: DISCORD_WEBHOOK_URL is missing.");
+        return;
     }
 
     const markets = new SomniaMarkets({
@@ -28,16 +26,17 @@ async function checkFundingRates() {
         const perps = await markets.client.listPerpMarkets();
         
         for (const market of perps) {
-            const currentRate = Number(market.fundingRate || market.currentFundingRate || 0);
+            const rawRate = Number(market.fundingRate || market.currentFundingRate || 0);
+            const currentRate = rawRate / 1e18;
             const prevRate = lastFundingRates.get(market.poolAddress);
 
-            if (prevRate !== undefined) {
-                if ((prevRate > 0 && currentRate < 0) || (prevRate < 0 && currentRate > 0)) {
-                    console.log(`🚨 Funding flip detected for ${market.baseSymbol}!`);
-                    await sendDiscordAlert(market.baseSymbol, prevRate, currentRate);
-                }
-            }
+            // Save to the exported object for the GUI to read
+            currentRates[market.baseSymbol] = currentRate;
 
+            if (prevRate !== undefined && ((prevRate > 0 && currentRate < 0) || (prevRate < 0 && currentRate > 0))) {
+                console.log(`🚨 Funding flip detected for ${market.baseSymbol}!`);
+                await sendDiscordAlert(market.baseSymbol, prevRate, currentRate);
+            }
             lastFundingRates.set(market.poolAddress, currentRate);
         }
     } catch (error) {
@@ -46,18 +45,21 @@ async function checkFundingRates() {
 }
 
 async function sendDiscordAlert(symbol: string, oldRate: number, newRate: number) {
+    if (!DISCORD_WEBHOOK_URL) return;
     const payload = {
         content: `🚨 **Funding Rate Flip Detected** 🚨\n**Market:** ${symbol}\n**Previous Rate:** ${oldRate}\n**New Rate:** ${newRate}`
     };
-
     try {
-        await axios.post(DISCORD_WEBHOOK_URL!, payload);
+        await axios.post(DISCORD_WEBHOOK_URL, payload);
         console.log("✅ Discord alert sent!");
     } catch (error) {
         console.error("❌ Failed to send Discord alert:", error);
     }
 }
 
-console.log("🚀 Starting DreamDEX Funding Rate Monitor...");
-checkFundingRates();
-setInterval(checkFundingRates, 60000);
+// Start the background loop
+export function startBot() {
+    console.log("🚀 Starting background engine...");
+    checkFundingRates();
+    setInterval(checkFundingRates, 60000);
+}
